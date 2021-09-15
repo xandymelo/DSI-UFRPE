@@ -1,16 +1,14 @@
-# flutter_application_1
+# Entrega-1-parte-2
 
-A new Flutter project.
+Para a entrega dessa parte da cadeira, eu segui esses dois codelabs:
+  - https://codelabs.developers.google.com/codelabs/first-flutter-app-pt1
+  - https://codelabs.developers.google.com/codelabs/first-flutter-app-pt2
+ 
+ 
+ e desenvolvi o funcionamento do "Swap and delete".
+ 
+ RESULTADO:
+ 
+ 
+ ![Animação](https://user-images.githubusercontent.com/54015485/133464775-3a80ac42-4bd7-44a7-8bce-2cef58584347.gif)
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.

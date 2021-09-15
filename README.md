@@ -1,5 +1,7 @@
 # DSI-UFRPE
-Repositório para cadeira de Desenvolvimento de Sistemas da Informação da UFRPE 2021.2 
+
+
+
 Para a entrega dessa parte da cadeira, eu segui esses dois codelabs:
   - https://codelabs.developers.google.com/codelabs/first-flutter-app-pt1
   - https://codelabs.developers.google.com/codelabs/first-flutter-app-pt2

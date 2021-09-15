@@ -24,7 +24,7 @@ class RandomWords extends StatefulWidget {
 
 class _RandomWordsState extends State<RandomWords> {
   final _suggestions = <WordPair>[];
-  final _saved = <WordPair>{};
+  final _saved = <WordPair>[];
   final _biggerFont = const TextStyle(fontSize: 18); 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +83,21 @@ void _pushSaved() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (BuildContext context) {
-          final tiles = _saved.map(
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('Saved Suggestions'),
+            ),
+            body: _buildSave(),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSave () {
+    final divided = ListTile.divideTiles(
+            context: context,
+            tiles: _saved.map(
             (WordPair pair) {
               return ListTile(
                 title: Text(
@@ -92,23 +106,55 @@ void _pushSaved() {
                 ),
               );
             },
-          );
-          final divided = ListTile.divideTiles(
-            context: context,
-            tiles: tiles,
-          ).toList();
+          )).toList();
+    
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _saved.length,
+      itemBuilder: (context, index) {          
+          final item = divided[index];
+          return Dismissible(
+              child: item,
+              key: ValueKey(item),
+              onDismissed: (direction) {
+                // Remove o item da fonte de dados
+                setState(() {
+                  _saved.removeAt(index);
+                });
+                // Exibe o snackbar
+                Scaffold
+                    .of(context)
+                    .showSnackBar(
+                      SnackBar(
+                        content: 
+                        Text(
+                          "$item foi removido"),
+                        ),
+                     );
+              },
+              background: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.rectangle, 
+                  gradient: LinearGradient(
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomLeft,
+                    colors: [
+                      Colors.blue,
+                      Colors.red,
+                    ],
+                  ), 
+                  borderRadius: BorderRadius.circular(12)
+                  ), 
+                child: Align(
+                  alignment: Alignment(-0.8,0),
+                  child: Icon(Icons.delete, color: Colors.black38),
+                ),
+              ),
 
-          return Scaffold(
-            appBar: AppBar(
-              title: Text('Saved Suggestions'),
-            ),
-            body: ListView(children: divided),
+
           );
-        },
-      ),
+      },
     );
   }
-
-  //Widget _buildSave () {}
 
 }

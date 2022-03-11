@@ -72,27 +72,66 @@ class _RandomWordsState extends State<RandomWords> {
     return Text('nada');
   }
 
-  Widget _buildSave() {
-    /*final divided = ListTile.divideTiles(
+  Widget _buildRowSaved(int index) {
+    final divided = ListTile.divideTiles(
         context: context,
         tiles: _saved.map(
-              (WordPair pair) {
+          (WordPair pair) {
             return ListTile(
+              leading: InkWell(
+                onTap: () {
+                  setState(() {
+                    _saved.removeAt(index);
+                  }
+                  );
+                },
+                child: Icon(Icons.delete),
+              ),
               title: Text(
                 pair.asPascalCase,
                 style: _biggerFont,
               ),
             );
           },
-        )).toList();*/
+        )).toList();
+    final item = divided[index];
+    return Dismissible(
+      child: item,
+      key: ValueKey(item),
+      onDismissed: (direction) {
+        // Remove o item da fonte de dados
+        setState(() {
+          _saved.removeAt(index);
+        });
+      },
+      background: Container(
+        decoration: BoxDecoration(
+            shape: BoxShape.rectangle,
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: [
+                Colors.blue,
+                Colors.yellow,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(12)),
+        child: Align(
+          alignment: Alignment(-0.8, 0),
+          child: Icon(Icons.delete, color: Colors.black38),
+        ),
+      ),
+    );
+  }
 
+  Widget _buildSave() {
     switch (gridPressed) {
       case false:
         return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: _saved.length,
           itemBuilder: (context, index) {
-            return _buildSaveRow(_saved[index], index);
+            return _buildRowSaved(index);
           },
         );
       case true:
@@ -103,7 +142,7 @@ class _RandomWordsState extends State<RandomWords> {
             ),
             itemCount: _saved.length,
             itemBuilder: (BuildContext _context, int i) {
-              return _buildSaveRow(_saved[i], i);
+              return _buildRowSaved(i);
             });
     }
     return Text("nada");
@@ -141,13 +180,12 @@ class _RandomWordsState extends State<RandomWords> {
           );
         })).then(
           (newWord) {
+            final indexSaved = _saved.indexWhere((element) =>
+                element.first == pair.first && element.second == pair.second);
             if (newWord[0] == 'M' && newWord[1] != '' && newWord[2] != '') {
               setState(
                 () {
                   _suggestions[index] = WordPair(newWord[1], newWord[2]);
-                  final indexSaved = _saved.indexWhere((element) =>
-                      element.first == pair.first &&
-                      element.second == pair.second);
                   debugPrint('$indexSaved');
                   if (indexSaved != -1) {
                     _saved[indexSaved] = WordPair(newWord[1], newWord[2]);
@@ -158,6 +196,8 @@ class _RandomWordsState extends State<RandomWords> {
                 (newWord[1] == '' && newWord[2] == '')) {
               setState(() {
                 _suggestions.remove(pair);
+                _saved.remove(pair);
+                debugPrint('$_saved');
               });
             }
           },
@@ -177,27 +217,6 @@ class _RandomWordsState extends State<RandomWords> {
             body: _buildSave(),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildSaveRow(WordPair pair, int index) {
-    return ListTile(
-      title: Text(
-        pair.asPascalCase,
-        style: _biggerFont,
-      ),
-      trailing: InkWell(
-        onTap: () {
-          //ao tocar no coração
-          setState(() {
-            _saved.remove(pair);
-          });
-        },
-        child: Icon(
-          Icons.favorite,
-          color: Colors.red,
-        ),
       ),
     );
   }

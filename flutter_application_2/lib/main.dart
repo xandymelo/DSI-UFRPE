@@ -9,6 +9,13 @@ class StartupGenerator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(
+          colorScheme: ColorScheme.fromSwatch(
+            primarySwatch: Colors.yellow,
+          ).copyWith(
+            secondary: Colors.yellow[800],
+          )
+      ),
       title: 'Startup Name Generator',
       home: RandomWords(),
     );

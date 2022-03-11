@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:english_words/english_words.dart';
 import 'package:flutter_application_1/screens/edit_suggestion.dart';
 
+import '../models/sugestao.dart';
+
 /*CRIAR A TELA SAVED E PASSAR COMO ATRIBUTOS A LISTA DE SAVED E O GRIDPRESSED*/
 
 class RandomWords extends StatefulWidget {
@@ -10,9 +12,9 @@ class RandomWords extends StatefulWidget {
 }
 
 class _RandomWordsState extends State<RandomWords> {
-  final _suggestions = <WordPair>[];
+  final _suggestions = <Sugestao>[];
   bool gridPressed = false;
-  final _saved = <WordPair>[];
+  /*final _saved = <WordPair>[];*/
   final _biggerFont = const TextStyle(fontSize: 18);
 
   @override
@@ -51,7 +53,14 @@ class _RandomWordsState extends State<RandomWords> {
 
               final int index = i ~/ 2;
               if (index >= _suggestions.length) {
-                _suggestions.addAll(generateWordPairs().take(10));
+                final Iterable<WordPair> wordsGenerated =
+                    generateWordPairs().take(10);
+                final List<Sugestao> wordsConverted = [];
+                wordsGenerated.forEach((element) {
+                  wordsConverted.add(Sugestao(element, false));
+                });
+                debugPrint('$wordsConverted');
+                _suggestions.addAll(wordsConverted);
               }
               return _buildRow(_suggestions[index], index);
             });
@@ -64,7 +73,13 @@ class _RandomWordsState extends State<RandomWords> {
             itemBuilder: (BuildContext _context, int i) {
               final int index = i;
               if (index >= _suggestions.length) {
-                _suggestions.addAll(generateWordPairs().take(10));
+                final Iterable<WordPair> wordsGenerated =
+                generateWordPairs().take(10);
+                final List<Sugestao> wordsConverted = [];
+                wordsGenerated.forEach((element) {
+                  wordsConverted.add(Sugestao(element, false));
+                });
+                _suggestions.addAll(wordsConverted);
               }
               return _buildRow(_suggestions[index], index);
             });
@@ -75,20 +90,19 @@ class _RandomWordsState extends State<RandomWords> {
   Widget _buildRowSaved(int index) {
     final divided = ListTile.divideTiles(
         context: context,
-        tiles: _saved.map(
-          (WordPair pair) {
+        tiles: _suggestions.where((element) => element.liked == true).toList().map(
+          (Sugestao pair) {
             return ListTile(
-              leading: InkWell(
+              /*leading: InkWell(
                 onTap: () {
                   setState(() {
-                    _saved.removeAt(index);
-                  }
-                  );
+                    _suggestions[index].liked = false;
+                  });
                 },
                 child: Icon(Icons.delete),
-              ),
+              ),*/
               title: Text(
-                pair.asPascalCase,
+                pair.wordpair.asPascalCase,
                 style: _biggerFont,
               ),
             );
@@ -101,7 +115,7 @@ class _RandomWordsState extends State<RandomWords> {
       onDismissed: (direction) {
         // Remove o item da fonte de dados
         setState(() {
-          _saved.removeAt(index);
+          _suggestions[index].liked = false;
         });
       },
       background: Container(
@@ -125,34 +139,33 @@ class _RandomWordsState extends State<RandomWords> {
   }
 
   Widget _buildSave() {
-    switch (gridPressed) {
-      case false:
+    /*switch (gridPressed) {
+      case false:*/
         return ListView.builder(
           padding: const EdgeInsets.all(16),
-          itemCount: _saved.length,
+          itemCount: _suggestions.where((element) => element.liked == true).toList().length,
           itemBuilder: (context, index) {
             return _buildRowSaved(index);
           },
         );
-      case true:
+      /*case true:
         return GridView.builder(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               childAspectRatio: 1,
             ),
-            itemCount: _saved.length,
+            itemCount: _suggestions.where((element) => element.liked == true).toList().length,
             itemBuilder: (BuildContext _context, int i) {
               return _buildRowSaved(i);
             });
-    }
-    return Text("nada");
+    }*/
   }
 
-  Widget _buildRow(WordPair pair, int index) {
-    final alreadySaved = _saved.contains(pair);
+  Widget _buildRow(Sugestao pair, int index) {
+    final alreadySaved = _suggestions[index].liked;
     return ListTile(
       title: Text(
-        pair.asPascalCase,
+        pair.wordpair.asPascalCase,
         style: _biggerFont,
       ),
       trailing: InkWell(
@@ -160,9 +173,11 @@ class _RandomWordsState extends State<RandomWords> {
           //ao tocar no coração
           setState(() {
             if (alreadySaved) {
-              _saved.remove(pair);
+              /*_suggestions[index].liked = false;*/
+              pair.liked = false;
             } else {
-              _saved.add(pair);
+              /*_suggestions[index].liked = true;*/
+              pair.liked = true;
             }
           });
         },
@@ -175,29 +190,21 @@ class _RandomWordsState extends State<RandomWords> {
       onTap: () {
         Navigator.push(context, MaterialPageRoute(builder: (context) {
           return EditSuggestion(
-            pair.first,
-            pair.second,
+            pair.wordpair.first,
+            pair.wordpair.second,
           );
         })).then(
           (newWord) {
-            final indexSaved = _saved.indexWhere((element) =>
-                element.first == pair.first && element.second == pair.second);
             if (newWord[0] == 'M' && newWord[1] != '' && newWord[2] != '') {
               setState(
                 () {
-                  _suggestions[index] = WordPair(newWord[1], newWord[2]);
-                  debugPrint('$indexSaved');
-                  if (indexSaved != -1) {
-                    _saved[indexSaved] = WordPair(newWord[1], newWord[2]);
-                  }
+                  _suggestions[index] = Sugestao(WordPair(newWord[1], newWord[2]), pair.liked);
                 },
               );
             } else if (newWord[0] == 'D' ||
                 (newWord[1] == '' && newWord[2] == '')) {
               setState(() {
                 _suggestions.remove(pair);
-                _saved.remove(pair);
-                debugPrint('$_saved');
               });
             }
           },

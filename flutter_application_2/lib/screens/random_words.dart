@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:english_words/english_words.dart';
 import 'package:flutter_application_1/screens/edit_suggestion.dart';
 
+/*CRIAR A TELA SAVED E PASSAR COMO ATRIBUTOS A LISTA DE SAVED E O GRIDPRESSED*/
+
 class RandomWords extends StatefulWidget {
   @override
   _RandomWordsState createState() => _RandomWordsState();
@@ -9,9 +11,9 @@ class RandomWords extends StatefulWidget {
 
 class _RandomWordsState extends State<RandomWords> {
   final _suggestions = <WordPair>[];
+  bool gridPressed = false;
   final _saved = <WordPair>[];
   final _biggerFont = const TextStyle(fontSize: 18);
-  bool gridPressed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +72,43 @@ class _RandomWordsState extends State<RandomWords> {
     return Text('nada');
   }
 
+  Widget _buildSave() {
+    /*final divided = ListTile.divideTiles(
+        context: context,
+        tiles: _saved.map(
+              (WordPair pair) {
+            return ListTile(
+              title: Text(
+                pair.asPascalCase,
+                style: _biggerFont,
+              ),
+            );
+          },
+        )).toList();*/
+
+    switch (gridPressed) {
+      case false:
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: _saved.length,
+          itemBuilder: (context, index) {
+            return _buildSaveRow(_saved[index], index);
+          },
+        );
+      case true:
+        return GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 1,
+            ),
+            itemCount: _saved.length,
+            itemBuilder: (BuildContext _context, int i) {
+              return _buildSaveRow(_saved[i], i);
+            });
+    }
+    return Text("nada");
+  }
+
   Widget _buildRow(WordPair pair, int index) {
     final alreadySaved = _saved.contains(pair);
     return ListTile(
@@ -96,15 +135,30 @@ class _RandomWordsState extends State<RandomWords> {
       ),
       onTap: () {
         Navigator.push(context, MaterialPageRoute(builder: (context) {
-          return EditSuggestion(suggestion: pair.toString());
+          return EditSuggestion(
+            pair.first,
+            pair.second,
+          );
         })).then(
           (newWord) {
-            if (newWord != null) {
+            if (newWord[0] == 'M' && newWord[1] != '' && newWord[2] != '') {
               setState(
                 () {
-                  _suggestions[index] = WordPair('teste1', 'teste2');
+                  _suggestions[index] = WordPair(newWord[1], newWord[2]);
+                  final indexSaved = _saved.indexWhere((element) =>
+                      element.first == pair.first &&
+                      element.second == pair.second);
+                  debugPrint('$indexSaved');
+                  if (indexSaved != -1) {
+                    _saved[indexSaved] = WordPair(newWord[1], newWord[2]);
+                  }
                 },
               );
+            } else if (newWord[0] == 'D' ||
+                (newWord[1] == '' && newWord[2] == '')) {
+              setState(() {
+                _suggestions.remove(pair);
+              });
             }
           },
         );
@@ -127,73 +181,24 @@ class _RandomWordsState extends State<RandomWords> {
     );
   }
 
-  Widget _buildSave() {
-    final divided = ListTile.divideTiles(
-        context: context,
-        tiles: _saved.map(
-          (WordPair pair) {
-            return ListTile(
-              title: Text(
-                pair.asPascalCase,
-                style: _biggerFont,
-              ),
-            );
-          },
-        )).toList();
-
-    switch (gridPressed) {
-      case false:
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: _saved.length,
-          itemBuilder: (context, index) {
-            final item = divided[index];
-            return Dismissible(
-              child: item,
-              key: ValueKey(item),
-              onDismissed: (direction) {
-                // Remove o item da fonte de dados
-                setState(() {
-                  _saved.removeAt(index);
-                });
-                // Exibe o snackbar
-                Scaffold.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text("$item foi removido"),
-                  ),
-                );
-              },
-              background: Container(
-                decoration: BoxDecoration(
-                    shape: BoxShape.rectangle,
-                    gradient: LinearGradient(
-                      begin: Alignment.topRight,
-                      end: Alignment.bottomLeft,
-                      colors: [
-                        Colors.blue,
-                        Colors.red,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(12)),
-                child: Align(
-                  alignment: Alignment(-0.8, 0),
-                  child: Icon(Icons.delete, color: Colors.black38),
-                ),
-              ),
-            );
-          },
-        );
-      case true:
-        return GridView.builder(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 1,
-            ),
-            itemCount: _saved.length,
-            itemBuilder: (BuildContext _context, int i) {
-              return _buildRow(_saved[i], i);
-            });
-    }
-    return Text("nada");
+  Widget _buildSaveRow(WordPair pair, int index) {
+    return ListTile(
+      title: Text(
+        pair.asPascalCase,
+        style: _biggerFont,
+      ),
+      trailing: InkWell(
+        onTap: () {
+          //ao tocar no coração
+          setState(() {
+            _saved.remove(pair);
+          });
+        },
+        child: Icon(
+          Icons.favorite,
+          color: Colors.red,
+        ),
+      ),
+    );
   }
 }

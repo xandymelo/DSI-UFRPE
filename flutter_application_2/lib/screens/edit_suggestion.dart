@@ -7,18 +7,16 @@ const _modifyButton =  'Modificar';
 const _deleteButton =  'Exluir';
 
 class EditSuggestion extends StatelessWidget {
-  final String _firstSuggestion;
-  final String _secondSuggestion;
   final TextEditingController _suggestionFirstController = TextEditingController();
   final TextEditingController _suggestionSecondController = TextEditingController();
 
 
-  EditSuggestion(this._firstSuggestion, this._secondSuggestion,);
 
   @override
   Widget build(BuildContext context) {
-    _suggestionFirstController.text = _firstSuggestion;
-    _suggestionSecondController.text = _secondSuggestion;
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, String>;
+    _suggestionFirstController.text = args!['first'].toString();
+    _suggestionSecondController.text = args!['second'].toString();
     return Scaffold(
       appBar: AppBar(
         title: Text('Edit Suggestion'),
@@ -44,7 +42,7 @@ class EditSuggestion extends StatelessWidget {
               width: double.maxFinite,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context, ['D',_firstSuggestion,_secondSuggestion]);
+                  Navigator.pop(context, ['D',args!['first'].toString(),args!['second'].toString()]);
                 },
                 child: Text('$_deleteButton'),
               ),

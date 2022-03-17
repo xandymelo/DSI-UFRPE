@@ -1,13 +1,15 @@
 import 'package:english_words/english_words.dart';
 import 'package:flutter/cupertino.dart';
 class Sugestao {
-  final WordPair wordpair;
+  final String first;
+  final String second;
   bool liked;
 
-  Sugestao(this.wordpair, this.liked);
+
+  Sugestao(this.first, this.second, this.liked);
 
   @override
   String toString() {
-    return 'Sugestao{wordpair: $wordpair, liked: $liked}';
+    return 'Sugestao{first: $first, second: $second, liked: $liked}';
   }
 }

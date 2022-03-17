@@ -18,6 +18,10 @@ class StartupGenerator extends StatelessWidget {
       ),
       title: 'Startup Name Generator',
       home: RandomWords(),
+      routes: {
+        // When navigating to the "/second" route, build the SecondScreen widget.
+        '/edit': (context) => EditSuggestion(),
+      },
     );
   }
 }

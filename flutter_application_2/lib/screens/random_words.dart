@@ -57,7 +57,7 @@ class _RandomWordsState extends State<RandomWords> {
                     generateWordPairs().take(10);
                 final List<Sugestao> wordsConverted = [];
                 wordsGenerated.forEach((element) {
-                  wordsConverted.add(Sugestao(element, false));
+                  wordsConverted.add(Sugestao(element.first.toString(),element.second.toString(), false));
                 });
                 debugPrint('$wordsConverted');
                 _suggestions.addAll(wordsConverted);
@@ -77,7 +77,7 @@ class _RandomWordsState extends State<RandomWords> {
                 generateWordPairs().take(10);
                 final List<Sugestao> wordsConverted = [];
                 wordsGenerated.forEach((element) {
-                  wordsConverted.add(Sugestao(element, false));
+                  wordsConverted.add(Sugestao(element.first.toString(),element.second.toString(), false));
                 });
                 _suggestions.addAll(wordsConverted);
               }
@@ -102,7 +102,7 @@ class _RandomWordsState extends State<RandomWords> {
                 child: Icon(Icons.delete),
               ),*/
               title: Text(
-                pair.wordpair.asPascalCase,
+                WordPair(pair.first,pair.second).asPascalCase,
                 style: _biggerFont,
               ),
             );
@@ -165,7 +165,7 @@ class _RandomWordsState extends State<RandomWords> {
     final alreadySaved = _suggestions[index].liked;
     return ListTile(
       title: Text(
-        pair.wordpair.asPascalCase,
+        WordPair(pair.first,pair.second).asPascalCase,
         style: _biggerFont,
       ),
       trailing: InkWell(
@@ -188,17 +188,16 @@ class _RandomWordsState extends State<RandomWords> {
         ),
       ),
       onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (context) {
-          return EditSuggestion(
-            pair.wordpair.first,
-            pair.wordpair.second,
-          );
-        })).then(
+        Navigator.pushNamed(context, '/edit',arguments:{
+          'first' : pair.first,
+          'second' : pair.second,
+        } ).then(
           (newWord) {
+            final List<String> users = newWord as List<String>;
             if (newWord[0] == 'M' && newWord[1] != '' && newWord[2] != '') {
               setState(
                 () {
-                  _suggestions[index] = Sugestao(WordPair(newWord[1], newWord[2]), pair.liked);
+                  _suggestions[index] = Sugestao(newWord[1], newWord[2], pair.liked);
                 },
               );
             } else if (newWord[0] == 'D' ||

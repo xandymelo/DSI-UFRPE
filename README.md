@@ -4,6 +4,7 @@
 
 Para a entrega dessa parte da cadeira, eu desenvolvi uma nova tela, para modificar as sugestões, com um botão para deletar também.
 - Se apagar os dois fiels, e clicar em modificar, faz o mesmo   efeito que apagar.
+- Ao clicar na linha/card ir para uma tela de edição (permitir alterar os valores do item);
  
  RESULTADO:
  

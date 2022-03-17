@@ -1,15 +1,8 @@
 # DSI-UFRPE
 
 
+para esta entrega:
+ - foi modificado o comando Navigator.push para Navigator.pushNamed
+ - o atributo Wordpair da classe Sugestão foi deletada, e foi adicionada os atributos first e second
+ - na entrega está pedindo a tela de edição das sugestões, porém já foi feito a tela na entrega passada.
 
-Para a entrega dessa parte da cadeira, eu segui esses dois codelabs:
-  - https://codelabs.developers.google.com/codelabs/first-flutter-app-pt1
-  - https://codelabs.developers.google.com/codelabs/first-flutter-app-pt2
- 
- 
- e desenvolvi o funcionamento do "Swap and delete".
- 
- RESULTADO:
- 
- 
- ![Animação](https://user-images.githubusercontent.com/54015485/133464775-3a80ac42-4bd7-44a7-8bce-2cef58584347.gif)

@@ -2,7 +2,7 @@
 
 
 para esta entrega:
- - foi modificado o comando Navigator.push para Navigator.pushNamed
- - o atributo Wordpair da classe Sugestão foi deletada, e foi adicionada os atributos first e second
- - na entrega está pedindo a tela de edição das sugestões, porém já foi feito a tela na entrega passada.
+ - Criar um ícone na tela da listagem com um (+) para exibir uma tela para a inclusão de novas palavras.
+ - Ao salvar, o objeto deve ser incluído na lista de palavras.
+ - Deve-se usar a mesma tela da edição com os campos em branco.
 

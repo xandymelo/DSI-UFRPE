@@ -3,7 +3,7 @@ import 'package:flutter_application_1/components/editor.dart';
 
 const _startupFirstName = 'First Name';
 const _startupSecondName = 'Second Name';
-const _modifyButton =  'Modificar';
+const _modifyButton =  'Salvar';
 const _deleteButton =  'Exluir';
 
 class EditSuggestion extends StatelessWidget {
@@ -15,8 +15,8 @@ class EditSuggestion extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as Map<String, String>;
-    _suggestionFirstController.text = args!['first'].toString();
-    _suggestionSecondController.text = args!['second'].toString();
+    _suggestionFirstController.text = args['first'].toString();
+    _suggestionSecondController.text = args['second'].toString();
     return Scaffold(
       appBar: AppBar(
         title: Text('Edit Suggestion'),
@@ -42,7 +42,7 @@ class EditSuggestion extends StatelessWidget {
               width: double.maxFinite,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context, ['D',args!['first'].toString(),args!['second'].toString()]);
+                  Navigator.pop(context, ['D',args['first'].toString(),args['second'].toString()]);
                 },
                 child: Text('$_deleteButton'),
               ),

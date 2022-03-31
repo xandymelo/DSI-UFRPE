@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:english_words/english_words.dart';
+import '../DAO/sugestao_dao.dart';
 import '../models/sugestao.dart';
-
 
 class RandomWords extends StatefulWidget {
   @override
@@ -9,7 +9,6 @@ class RandomWords extends StatefulWidget {
 }
 
 class _RandomWordsState extends State<RandomWords> {
-  final _suggestions = <Sugestao>[];
   bool gridPressed = false;
 
   final _biggerFont = const TextStyle(fontSize: 18);
@@ -33,7 +32,7 @@ class _RandomWordsState extends State<RandomWords> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _pushEdit(Sugestao('','', false), -1),
+        onPressed: () => _pushEdit(Sugestao('', '', false), -1),
         backgroundColor: Colors.yellow,
         child: const Icon(Icons.add),
       ),
@@ -52,7 +51,7 @@ class _RandomWordsState extends State<RandomWords> {
               }
 
               final int index = i ~/ 2;
-              if (index >= _suggestions.length) {
+              if (index >= SugestaoDAO.suggestions.length) {
                 final Iterable<WordPair> wordsGenerated =
                     generateWordPairs().take(10);
                 final List<Sugestao> wordsConverted = [];
@@ -60,9 +59,9 @@ class _RandomWordsState extends State<RandomWords> {
                   wordsConverted.add(Sugestao(element.first.toString(),
                       element.second.toString(), false));
                 });
-                _suggestions.addAll(wordsConverted);
+                SugestaoDAO.suggestions.addAll(wordsConverted);
               }
-              return _buildRow(_suggestions[index], index);
+              return _buildRow(SugestaoDAO.suggestions[index], index);
             });
       case true:
         return GridView.builder(
@@ -72,7 +71,7 @@ class _RandomWordsState extends State<RandomWords> {
             ),
             itemBuilder: (BuildContext _context, int i) {
               final int index = i;
-              if (index >= _suggestions.length) {
+              if (index >= SugestaoDAO.suggestions.length) {
                 final Iterable<WordPair> wordsGenerated =
                     generateWordPairs().take(10);
                 final List<Sugestao> wordsConverted = [];
@@ -80,36 +79,32 @@ class _RandomWordsState extends State<RandomWords> {
                   wordsConverted.add(Sugestao(element.first.toString(),
                       element.second.toString(), false));
                 });
-                _suggestions.addAll(wordsConverted);
+                SugestaoDAO.suggestions.addAll(wordsConverted);
               }
-              return _buildRow(_suggestions[index], index);
+              return _buildRow(SugestaoDAO.suggestions[index], index);
             });
     }
     return Text('nada');
   }
 
   Widget _buildRowSaved(int index) {
+    final List<Sugestao> tilesAsLlist = SugestaoDAO.suggestions
+        .where((element) => element.liked == true)
+        .toList();
+    final Iterable<ListTile> listTiles = tilesAsLlist.map(
+      (Sugestao pair) {
+        return ListTile(
+          title: Text(
+            WordPair(pair.first, pair.second).asPascalCase,
+            style: _biggerFont,
+          ),
+        );
+      },
+    );
     final divided = ListTile.divideTiles(
-        context: context,
-        tiles:
-            _suggestions.where((element) => element.liked == true).toList().map(
-          (Sugestao pair) {
-            return ListTile(
-              /*leading: InkWell(
-                onTap: () {
-                  setState(() {
-                    _suggestions[index].liked = false;
-                  });
-                },
-                child: Icon(Icons.delete),
-              ),*/
-              title: Text(
-                WordPair(pair.first, pair.second).asPascalCase,
-                style: _biggerFont,
-              ),
-            );
-          },
-        )).toList();
+      context: context,
+      tiles: listTiles,
+    ).toList();
     final item = divided[index];
     return Dismissible(
       child: item,
@@ -117,7 +112,7 @@ class _RandomWordsState extends State<RandomWords> {
       onDismissed: (direction) {
         // Remove o item da fonte de dados
         setState(() {
-          _suggestions[index].liked = false;
+          SugestaoDAO.suggestions[index].liked = false;
         });
       },
       background: Container(
@@ -145,7 +140,7 @@ class _RandomWordsState extends State<RandomWords> {
       case false:*/
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: _suggestions
+      itemCount: SugestaoDAO.suggestions
           .where((element) => element.liked == true)
           .toList()
           .length,
@@ -159,7 +154,7 @@ class _RandomWordsState extends State<RandomWords> {
               crossAxisCount: 2,
               childAspectRatio: 1,
             ),
-            itemCount: _suggestions.where((element) => element.liked == true).toList().length,
+            itemCount: SugestaoDAO.suggestions.where((element) => element.liked == true).toList().length,
             itemBuilder: (BuildContext _context, int i) {
               return _buildRowSaved(i);
             });
@@ -167,7 +162,7 @@ class _RandomWordsState extends State<RandomWords> {
   }
 
   Widget _buildRow(Sugestao pair, int index) {
-    final alreadySaved = _suggestions[index].liked;
+    final alreadySaved = SugestaoDAO.suggestions[index].liked;
     return ListTile(
       title: Text(
         WordPair(pair.first, pair.second).asPascalCase,
@@ -178,10 +173,10 @@ class _RandomWordsState extends State<RandomWords> {
           //ao tocar no coração
           setState(() {
             if (alreadySaved) {
-              /*_suggestions[index].liked = false;*/
+              /*SugestaoDAO.suggestions[index].liked = false;*/
               pair.liked = false;
             } else {
-              /*_suggestions[index].liked = true;*/
+              /*SugestaoDAO.suggestions[index].liked = true;*/
               pair.liked = true;
             }
           });
@@ -203,32 +198,33 @@ class _RandomWordsState extends State<RandomWords> {
       'first': pair.first,
       'second': pair.second,
     }).then(
-          (newWord) {
+      (newWord) {
         final List<String> users = newWord as List<String>;
         //caso o index -1 é o caso do floating action button,ou seja, adicionar a lista
         if (index == -1 && newWord[0] == 'M') {
           setState(() {
-            _suggestions.insert(0,Sugestao(newWord[1],newWord[2], false));
-            debugPrint('${_suggestions[0]}');
+            SugestaoDAO.suggestions
+                .insert(0, Sugestao(newWord[1], newWord[2], false));
+            debugPrint('${SugestaoDAO.suggestions[0]}');
           });
         } else if (newWord[0] == 'M' && newWord[1] != '' && newWord[2] != '') {
           setState(
-                () {
-              _suggestions[index] =
+            () {
+              SugestaoDAO.suggestions[index] =
                   Sugestao(newWord[1], newWord[2], pair.liked);
             },
           );
         } else if (newWord[0] == 'D' ||
             (newWord[1] == '' && newWord[2] == '')) {
           setState(() {
-            _suggestions.remove(pair);
+            SugestaoDAO.suggestions.remove(pair);
           });
         }
       },
     );
   }
 
-  Future _pushSaved()  async {
+  Future _pushSaved() async {
     return await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (BuildContext context) {

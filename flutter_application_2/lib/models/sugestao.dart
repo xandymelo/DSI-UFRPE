@@ -1,5 +1,3 @@
-import 'package:english_words/english_words.dart';
-import 'package:flutter/cupertino.dart';
 class Sugestao {
   final String first;
   final String second;

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:english_words/english_words.dart';
-import 'package:flutter_application_1/screens/edit_suggestion.dart';
 
+import '../DAO/sugestao_dao.dart';
 import '../models/sugestao.dart';
 
-/*CRIAR A TELA SAVED E PASSAR COMO ATRIBUTOS A LISTA DE SAVED E O GRIDPRESSED*/
 
 class RandomWords extends StatefulWidget {
   @override
@@ -12,9 +11,7 @@ class RandomWords extends StatefulWidget {
 }
 
 class _RandomWordsState extends State<RandomWords> {
-  final _suggestions = <Sugestao>[];
   bool gridPressed = false;
-  /*final _saved = <WordPair>[];*/
   final _biggerFont = const TextStyle(fontSize: 18);
 
   @override
@@ -26,14 +23,8 @@ class _RandomWordsState extends State<RandomWords> {
           IconButton(onPressed: _pushSaved, icon: Icon(Icons.list)),
           IconButton(
               onPressed: () => setState(() {
-                    if (gridPressed) {
-                      gridPressed = false;
-                      debugPrint('$gridPressed');
-                    } else {
-                      gridPressed = true;
-                      debugPrint('$gridPressed');
-                    }
-                  }),
+                gridPressed = !gridPressed;
+              }),
               icon: Icon(Icons.grid_goldenratio))
         ],
       ),
@@ -52,17 +43,17 @@ class _RandomWordsState extends State<RandomWords> {
               }
 
               final int index = i ~/ 2;
-              if (index >= _suggestions.length) {
+              if (index >= SugestaoDAO.suggestions.length) {
                 final Iterable<WordPair> wordsGenerated =
-                    generateWordPairs().take(10);
+                generateWordPairs().take(10);
                 final List<Sugestao> wordsConverted = [];
                 wordsGenerated.forEach((element) {
                   wordsConverted.add(Sugestao(element.first.toString(),element.second.toString(), false));
                 });
                 debugPrint('$wordsConverted');
-                _suggestions.addAll(wordsConverted);
+                SugestaoDAO.suggestions.addAll(wordsConverted);
               }
-              return _buildRow(_suggestions[index], index);
+              return _buildRow(SugestaoDAO.suggestions[index], index);
             });
       case true:
         return GridView.builder(
@@ -72,42 +63,37 @@ class _RandomWordsState extends State<RandomWords> {
             ),
             itemBuilder: (BuildContext _context, int i) {
               final int index = i;
-              if (index >= _suggestions.length) {
+              if (index >= SugestaoDAO.suggestions.length) {
                 final Iterable<WordPair> wordsGenerated =
                 generateWordPairs().take(10);
                 final List<Sugestao> wordsConverted = [];
                 wordsGenerated.forEach((element) {
                   wordsConverted.add(Sugestao(element.first.toString(),element.second.toString(), false));
                 });
-                _suggestions.addAll(wordsConverted);
+                SugestaoDAO.suggestions.addAll(wordsConverted);
               }
-              return _buildRow(_suggestions[index], index);
+              return _buildRow(SugestaoDAO.suggestions[index], index);
             });
     }
     return Text('nada');
   }
 
   Widget _buildRowSaved(int index) {
+    final List<Sugestao> tilesAsLlist = SugestaoDAO.suggestions.where((element) => element.liked == true).toList();
+    final Iterable<ListTile> listTiles = tilesAsLlist.map(
+          (Sugestao pair) {
+        return ListTile(
+          title: Text(
+            WordPair(pair.first,pair.second).asPascalCase,
+            style: _biggerFont,
+          ),
+        );
+      },
+    );
     final divided = ListTile.divideTiles(
         context: context,
-        tiles: _suggestions.where((element) => element.liked == true).toList().map(
-          (Sugestao pair) {
-            return ListTile(
-              /*leading: InkWell(
-                onTap: () {
-                  setState(() {
-                    _suggestions[index].liked = false;
-                  });
-                },
-                child: Icon(Icons.delete),
-              ),*/
-              title: Text(
-                WordPair(pair.first,pair.second).asPascalCase,
-                style: _biggerFont,
-              ),
-            );
-          },
-        )).toList();
+        tiles: listTiles,
+    ).toList();
     final item = divided[index];
     return Dismissible(
       child: item,
@@ -115,7 +101,7 @@ class _RandomWordsState extends State<RandomWords> {
       onDismissed: (direction) {
         // Remove o item da fonte de dados
         setState(() {
-          _suggestions[index].liked = false;
+          SugestaoDAO.suggestions[index].liked = false;
         });
       },
       background: Container(
@@ -141,20 +127,20 @@ class _RandomWordsState extends State<RandomWords> {
   Widget _buildSave() {
     /*switch (gridPressed) {
       case false:*/
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: _suggestions.where((element) => element.liked == true).toList().length,
-          itemBuilder: (context, index) {
-            return _buildRowSaved(index);
-          },
-        );
-      /*case true:
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: SugestaoDAO.suggestions.where((element) => element.liked == true).toList().length,
+      itemBuilder: (context, index) {
+        return _buildRowSaved(index);
+      },
+    );
+    /*case true:
         return GridView.builder(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               childAspectRatio: 1,
             ),
-            itemCount: _suggestions.where((element) => element.liked == true).toList().length,
+            itemCount: SugestaoDAO.suggestions.where((element) => element.liked == true).toList().length,
             itemBuilder: (BuildContext _context, int i) {
               return _buildRowSaved(i);
             });
@@ -162,7 +148,7 @@ class _RandomWordsState extends State<RandomWords> {
   }
 
   Widget _buildRow(Sugestao pair, int index) {
-    final alreadySaved = _suggestions[index].liked;
+    final alreadySaved = SugestaoDAO.suggestions[index].liked;
     return ListTile(
       title: Text(
         WordPair(pair.first,pair.second).asPascalCase,
@@ -173,10 +159,10 @@ class _RandomWordsState extends State<RandomWords> {
           //ao tocar no coração
           setState(() {
             if (alreadySaved) {
-              /*_suggestions[index].liked = false;*/
+              /*SugestaoDAO.suggestions[index].liked = false;*/
               pair.liked = false;
             } else {
-              /*_suggestions[index].liked = true;*/
+              /*SugestaoDAO.suggestions[index].liked = true;*/
               pair.liked = true;
             }
           });
@@ -192,18 +178,18 @@ class _RandomWordsState extends State<RandomWords> {
           'first' : pair.first,
           'second' : pair.second,
         } ).then(
-          (newWord) {
+              (newWord) {
             final List<String> users = newWord as List<String>;
             if (newWord[0] == 'M' && newWord[1] != '' && newWord[2] != '') {
               setState(
-                () {
-                  _suggestions[index] = Sugestao(newWord[1], newWord[2], pair.liked);
+                    () {
+                  SugestaoDAO.suggestions[index] = Sugestao(newWord[1], newWord[2], pair.liked);
                 },
               );
             } else if (newWord[0] == 'D' ||
                 (newWord[1] == '' && newWord[2] == '')) {
               setState(() {
-                _suggestions.remove(pair);
+                SugestaoDAO.suggestions.remove(pair);
               });
             }
           },

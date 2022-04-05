@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:english_words/english_words.dart';
 import '../DAO/sugestao_dao.dart';
 import '../models/sugestao.dart';
+import '../widgets/progress.dart';
 
+
+//RESOLVER PROBLEMA DO _BUILDROW COM UMA QUERY WHERE LIKED = TRUE
 class RandomWords extends StatefulWidget {
   @override
   _RandomWordsState createState() => _RandomWordsState();
@@ -10,8 +13,13 @@ class RandomWords extends StatefulWidget {
 
 class _RandomWordsState extends State<RandomWords> {
   bool gridPressed = false;
-
   final _biggerFont = const TextStyle(fontSize: 18);
+
+  // @override
+  // void InitState() {
+  //   super.initState();
+  //   SugestaoDAO.armazena20Palavras();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -43,26 +51,53 @@ class _RandomWordsState extends State<RandomWords> {
   Widget _buildSuggestions() {
     switch (gridPressed) {
       case false:
-        return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemBuilder: (BuildContext _context, int i) {
-              if (i.isOdd) {
-                return Divider();
+        return FutureBuilder<List<Sugestao>>(
+            // padding: const EdgeInsets.all(16),
+            // count: SugestaoDAO.suggestions.length,
+            future: SugestaoDAO.findAll(),
+            builder: (context, snapshot) {
+              switch (snapshot.connectionState) {
+                case ConnectionState.none:
+                  // TODO: Handle this case.
+                  break;
+                case ConnectionState.waiting:
+                  return const Progress();
+                case ConnectionState.active:
+                  // TODO: Handle this case.
+                  break;
+                case ConnectionState.done:
+                  final sugestoes = snapshot.data as List<Sugestao>;
+                  debugPrint('${sugestoes.length}');
+                  if (sugestoes.length != 0) {
+                    return ListView.builder(
+                      itemCount: sugestoes.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return _buildRow(sugestoes[index], index);
+                      },
+                    );
+                  }
               }
+              return Text('Unknown error');
+            }
+            // (BuildContext _context, int i) {
+            // if (i.isOdd) {
+            //   return Divider();
+            // }
 
-              final int index = i ~/ 2;
-              if (index >= SugestaoDAO.suggestions.length) {
-                final Iterable<WordPair> wordsGenerated =
-                    generateWordPairs().take(10);
-                final List<Sugestao> wordsConverted = [];
-                wordsGenerated.forEach((element) {
-                  wordsConverted.add(Sugestao(element.first.toString(),
-                      element.second.toString(), false));
-                });
-                SugestaoDAO.suggestions.addAll(wordsConverted);
-              }
-              return _buildRow(SugestaoDAO.suggestions[index], index);
-            });
+            // final int index = i ~/ 2;
+            // if (index >= SugestaoDAO.suggestions.length) {
+            //   final Iterable<WordPair> wordsGenerated =
+            //       generateWordPairs().take(10);
+            //   final List<Sugestao> wordsConverted = [];
+            //   wordsGenerated.forEach((element) {
+            //     wordsConverted.add(Sugestao(element.first.toString(),
+            //         element.second.toString(), false));
+            //   });
+            //   SugestaoDAO.suggestions.addAll(wordsConverted);
+            // }
+            // return _buildRow(SugestaoDAO.suggestions[i], i);
+            // }
+            );
       case true:
         return GridView.builder(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -202,12 +237,13 @@ class _RandomWordsState extends State<RandomWords> {
         final List<String> users = newWord as List<String>;
         //caso o index -1 é o caso do floating action button,ou seja, adicionar a lista
         if (index == -1 && newWord[0] == 'M') {
+          debugPrint('floatingbutton');
           setState(() {
-            SugestaoDAO.suggestions
-                .insert(0, Sugestao(newWord[1], newWord[2], false));
+            SugestaoDAO.insert(Sugestao(newWord[1], newWord[2], false));
             debugPrint('${SugestaoDAO.suggestions[0]}');
           });
         } else if (newWord[0] == 'M' && newWord[1] != '' && newWord[2] != '') {
+          debugPrint('modificar');
           setState(
             () {
               SugestaoDAO.suggestions[index] =
@@ -216,6 +252,7 @@ class _RandomWordsState extends State<RandomWords> {
           );
         } else if (newWord[0] == 'D' ||
             (newWord[1] == '' && newWord[2] == '')) {
+          debugPrint('deletar');
           setState(() {
             SugestaoDAO.suggestions.remove(pair);
           });

@@ -4,7 +4,6 @@ import '../DAO/sugestao_dao.dart';
 import '../models/sugestao.dart';
 import '../widgets/progress.dart';
 
-//RESOLVER PROBLEMA DO _BUILDROW COM UMA QUERY WHERE LIKED = TRUE
 class RandomWords extends StatefulWidget {
   @override
   _RandomWordsState createState() => _RandomWordsState();
@@ -12,13 +11,11 @@ class RandomWords extends StatefulWidget {
 
 class _RandomWordsState extends State<RandomWords> {
   bool gridPressed = false;
-  late Future<List<Sugestao>> _getData = SugestaoDAO.findAll();
-
-  // late List<Sugestao> suggestions;
+  Future<List<Sugestao>> findall = SugestaoDAO.findAll();
   final _biggerFont = const TextStyle(fontSize: 18);
-
   // @override
   // void InitState() {
+  //
   //   super.initState();
   // }
 
@@ -30,7 +27,8 @@ class _RandomWordsState extends State<RandomWords> {
         actions: [
           IconButton(onPressed: _pushSaved, icon: Icon(Icons.list)),
           IconButton(
-              onPressed: () => setState(() {
+              onPressed: () =>
+                  setState(() {
                     if (gridPressed) {
                       gridPressed = false;
                     } else {
@@ -52,36 +50,40 @@ class _RandomWordsState extends State<RandomWords> {
   Widget _buildSuggestions() {
     switch (gridPressed) {
       case false:
-        return FutureBuilder<List<Sugestao>>(
-            // padding: const EdgeInsets.all(16),
-            // count: suggestions.length,
-            future: _getData,
-            builder: (context, snapshot) {
-              switch (snapshot.connectionState) {
-                case ConnectionState.none:
-                  // TODO: Handle this case.
-                  break;
-                case ConnectionState.waiting:
-                  return const Progress();
-                case ConnectionState.active:
-                  // TODO: Handle this case.
-                  break;
-                case ConnectionState.done:
-                  List<Sugestao> sugestoes = [];
-                  if (snapshot.data != null) {
-                    sugestoes = snapshot.data as List<Sugestao>;
-                  }
-                  debugPrint('FutureBuilder: ${sugestoes.length}');
-                    return ListView.builder(
-                      itemCount: sugestoes.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        return _buildRow(sugestoes[index], index);
-                      },
-                    );
-              }
-              return Text('Unknown error');
-            }
-            );
+        return ListView.builder(itemBuilder: (context, index) {
+          return _buildRow(SugestaoDAO.suggestions[index], index);
+        },
+        itemCount: SugestaoDAO.suggestions.length,);
+    // FutureBuilder<List<Sugestao>>(
+    //   // padding: const EdgeInsets.all(16),
+    //   // count: suggestions.length,
+    //   future: SugestaoDAO.findAll(),
+    //   builder: (context, snapshot) {
+    //     switch (snapshot.connectionState) {
+    //       case ConnectionState.none:
+    //         // TODO: Handle this case.
+    //         break;
+    //       case ConnectionState.waiting:
+    //         return const Progress();
+    //       case ConnectionState.active:
+    //         // TODO: Handle this case.
+    //         break;
+    //       case ConnectionState.done:
+    //         List<Sugestao> sugestoes = [];
+    //         if (snapshot.data != null) {
+    //           sugestoes = snapshot.data as List<Sugestao>;
+    //         }
+    //         debugPrint('FutureBuilder: ${sugestoes.length}');
+    //           return ListView.builder(
+    //             itemCount: sugestoes.length,
+    //             itemBuilder: (BuildContext context, int index) {
+    //               return _buildRow(sugestoes[index], index);
+    //             },
+    //           );
+    //     }
+    //     return Text('Unknown error');
+    //   }
+    //   );
       case true:
         return FutureBuilder<List<Sugestao>>(
           // padding: const EdgeInsets.all(16),
@@ -103,6 +105,7 @@ class _RandomWordsState extends State<RandomWords> {
                   debugPrint('${sugestoes.length}');
                   if (sugestoes.length != 0) {
                     return GridView.builder(
+                        itemCount: sugestoes.length,
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           childAspectRatio: 1,
@@ -110,21 +113,21 @@ class _RandomWordsState extends State<RandomWords> {
                         itemBuilder: (BuildContext _context, int index) {
                           return _buildRow(sugestoes[index], index);
                         });
-                      }
                   }
+              }
               return Text('Unknown error');
             }
         );
-
     }
     return Text('nada');
   }
 
-  Widget _buildRowSaved(List<Sugestao> suggestions,int index) {
+
+  Widget _buildRowSaved(List<Sugestao> suggestions, int index) {
     final List<Sugestao> tilesAsLlist =
-        suggestions.where((element) => element.liked == true).toList();
+    suggestions.where((element) => element.liked == true).toList();
     final Iterable<ListTile> listTiles = tilesAsLlist.map(
-      (Sugestao pair) {
+          (Sugestao pair) {
         return ListTile(
           title: Text(
             WordPair(pair.first, pair.second).asPascalCase,
@@ -195,16 +198,6 @@ class _RandomWordsState extends State<RandomWords> {
         return Text('Unknown error');
       },
     );
-    //   ListView.builder(
-    //   padding: const EdgeInsets.all(16),
-    //   itemCount: suggestions
-    //       .where((element) => element.liked == true)
-    //       .toList()
-    //       .length,
-    //   itemBuilder: (context, index) {
-    //     return _buildRowSaved(index);
-    //   },
-    // );
   }
 
   Widget _buildRow(Sugestao pair, int index) {
@@ -217,14 +210,14 @@ class _RandomWordsState extends State<RandomWords> {
       trailing: InkWell(
         onTap: () {
           //ao tocar no coração
-            if (alreadySaved) {
-              SugestaoDAO.modify(pair, Sugestao(pair.first, pair.second, false));
-              pair.liked = false;
-            } else {
-              SugestaoDAO.modify(pair, Sugestao(pair.first, pair.second, true));
-              pair.liked = true;
-            }
-            setState(() {});
+          if (alreadySaved) {
+            SugestaoDAO.modify(pair, Sugestao(pair.first, pair.second, false));
+            pair.liked = false;
+          } else {
+            SugestaoDAO.modify(pair, Sugestao(pair.first, pair.second, true));
+            pair.liked = true;
+          }
+          setState(() {});
         },
         child: Icon(
           //aparecer o ícone de coração
@@ -243,7 +236,7 @@ class _RandomWordsState extends State<RandomWords> {
       'first': pair.first,
       'second': pair.second,
     }).then(
-      (newWord) {
+          (newWord) {
         final List<String> users = newWord as List<String>;
         //caso o index -1 é o caso do floating action button,ou seja, adicionar a lista
         if (index == -1 && newWord[0] == 'M') {
@@ -254,18 +247,19 @@ class _RandomWordsState extends State<RandomWords> {
         } else if (newWord[0] == 'M' && newWord[1] != '' && newWord[2] != '') {
           debugPrint('modificar');
           setState(
-            () {
+                () {
               SugestaoDAO.modify(
                   pair, Sugestao(newWord[1], newWord[2], pair.liked));
-              // suggestions[index] =
-              //     Sugestao(newWord[1], newWord[2], pair.liked);
             },
           );
         } else if (newWord[0] == 'D' ||
             (newWord[1] == '' && newWord[2] == '')) {
           debugPrint('deletar');
           setState(() {
-            SugestaoDAO.remove(pair);
+            SugestaoDAO.remove(pair).then((id) {
+              SugestaoDAO.suggestions.remove(pair);
+              debugPrint('${SugestaoDAO.suggestions}');
+            });
           });
         }
       },

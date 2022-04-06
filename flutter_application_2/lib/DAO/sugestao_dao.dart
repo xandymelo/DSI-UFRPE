@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import '../models/sugestao.dart';
 
 class SugestaoDAO {
-  // static final List<Sugestao> _suggestions = [];
+  static final List<Sugestao> _suggestions = [];
   static FirebaseFirestore db = FirebaseFirestore.instance;
 
-  // static get suggestions => _suggestions;
+   static get suggestions => _suggestions;
 
   static Future armazena20Palavras() async {
     final Iterable<WordPair> wordpairs = generateWordPairs().take(20);
@@ -28,6 +28,7 @@ class SugestaoDAO {
       sugestoes
           .add(Sugestao(doc.get('first'), doc.get('second'), doc.get('liked')));
     });
+    _suggestions.addAll(sugestoes);
     return sugestoes;
   }
 
@@ -58,8 +59,9 @@ class SugestaoDAO {
         .collection('sugestao')
         .where('first', isEqualTo: sugestao.first)
         .where('second', isEqualTo: sugestao.second)
-        .where('liked', isEqualTo: sugestao.liked).get().then((id) async {
-          await db.collection('sugestao').doc(id.toString()).delete();
+        .where('liked', isEqualTo: sugestao.liked).get().then((idt) async {
+          debugPrint('${idt.docs[0].id}');
+          await db.collection('sugestao').doc(idt.docs[0].id).delete();
     });
   }
   static Future modify(Sugestao sugestaoDB, Sugestao sugestaoNova) async {

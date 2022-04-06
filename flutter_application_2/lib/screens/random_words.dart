@@ -4,7 +4,6 @@ import '../DAO/sugestao_dao.dart';
 import '../models/sugestao.dart';
 import '../widgets/progress.dart';
 
-
 //RESOLVER PROBLEMA DO _BUILDROW COM UMA QUERY WHERE LIKED = TRUE
 class RandomWords extends StatefulWidget {
   @override
@@ -13,13 +12,14 @@ class RandomWords extends StatefulWidget {
 
 class _RandomWordsState extends State<RandomWords> {
   bool gridPressed = false;
+  late Future<List<Sugestao>> _getData = SugestaoDAO.findAll();
+
   // late List<Sugestao> suggestions;
   final _biggerFont = const TextStyle(fontSize: 18);
 
   // @override
   // void InitState() {
   //   super.initState();
-  //   SugestaoDAO.armazena20Palavras();
   // }
 
   @override
@@ -55,7 +55,7 @@ class _RandomWordsState extends State<RandomWords> {
         return FutureBuilder<List<Sugestao>>(
             // padding: const EdgeInsets.all(16),
             // count: suggestions.length,
-            future: SugestaoDAO.findAll(),
+            future: _getData,
             builder: (context, snapshot) {
               switch (snapshot.connectionState) {
                 case ConnectionState.none:
@@ -67,67 +67,62 @@ class _RandomWordsState extends State<RandomWords> {
                   // TODO: Handle this case.
                   break;
                 case ConnectionState.done:
-                  final sugestoes = snapshot.data as List<Sugestao>;
-                  debugPrint('${sugestoes.length}');
-                  if (sugestoes.length != 0) {
+                  List<Sugestao> sugestoes = [];
+                  if (snapshot.data != null) {
+                    sugestoes = snapshot.data as List<Sugestao>;
+                  }
+                  debugPrint('FutureBuilder: ${sugestoes.length}');
                     return ListView.builder(
                       itemCount: sugestoes.length,
                       itemBuilder: (BuildContext context, int index) {
                         return _buildRow(sugestoes[index], index);
                       },
                     );
-                  }
               }
               return Text('Unknown error');
             }
-            // (BuildContext _context, int i) {
-            // if (i.isOdd) {
-            //   return Divider();
-            // }
-
-            // final int index = i ~/ 2;
-            // if (index >= suggestions.length) {
-            //   final Iterable<WordPair> wordsGenerated =
-            //       generateWordPairs().take(10);
-            //   final List<Sugestao> wordsConverted = [];
-            //   wordsGenerated.forEach((element) {
-            //     wordsConverted.add(Sugestao(element.first.toString(),
-            //         element.second.toString(), false));
-            //   });
-            //   suggestions.addAll(wordsConverted);
-            // }
-            // return _buildRow(suggestions[i], i);
-            // }
             );
       case true:
-        return GridView.builder(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 1,
-            ),
-            itemBuilder: (BuildContext _context, int i) {
-              final int index = i;
-              if (index >= suggestions.length) {
-                final Iterable<WordPair> wordsGenerated =
-                    generateWordPairs().take(10);
-                final List<Sugestao> wordsConverted = [];
-                wordsGenerated.forEach((element) {
-                  wordsConverted.add(Sugestao(element.first.toString(),
-                      element.second.toString(), false));
-                });
-                suggestions.addAll(wordsConverted);
-              }
-              return _buildRow(suggestions[index], index);
-            });
+        return FutureBuilder<List<Sugestao>>(
+          // padding: const EdgeInsets.all(16),
+          // count: suggestions.length,
+            initialData: [],
+            future: SugestaoDAO.findAll(),
+            builder: (context, snapshot) {
+              switch (snapshot.connectionState) {
+                case ConnectionState.none:
+                // TODO: Handle this case.
+                  break;
+                case ConnectionState.waiting:
+                  return const Progress();
+                case ConnectionState.active:
+                // TODO: Handle this case.
+                  break;
+                case ConnectionState.done:
+                  final sugestoes = snapshot.data as List<Sugestao>;
+                  debugPrint('${sugestoes.length}');
+                  if (sugestoes.length != 0) {
+                    return GridView.builder(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 1,
+                        ),
+                        itemBuilder: (BuildContext _context, int index) {
+                          return _buildRow(sugestoes[index], index);
+                        });
+                      }
+                  }
+              return Text('Unknown error');
+            }
+        );
+
     }
     return Text('nada');
   }
 
-  Widget _buildRowSaved(int index) {
-    
-    final List<Sugestao> tilesAsLlist = suggestions
-        .where((element) => element.liked == true)
-        .toList();
+  Widget _buildRowSaved(List<Sugestao> suggestions,int index) {
+    final List<Sugestao> tilesAsLlist =
+        suggestions.where((element) => element.liked == true).toList();
     final Iterable<ListTile> listTiles = tilesAsLlist.map(
       (Sugestao pair) {
         return ListTile(
@@ -173,33 +168,47 @@ class _RandomWordsState extends State<RandomWords> {
   }
 
   Widget _buildSave() {
-    /*switch (gridPressed) {
-      case false:*/
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: suggestions
-          .where((element) => element.liked == true)
-          .toList()
-          .length,
-      itemBuilder: (context, index) {
-        return _buildRowSaved(index);
+    return FutureBuilder(
+      future: SugestaoDAO.findLiked(),
+      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.none:
+          // TODO: Handle this case.
+            break;
+          case ConnectionState.waiting:
+            return const Progress();
+          case ConnectionState.active:
+          // TODO: Handle this case.
+            break;
+          case ConnectionState.done:
+            final sugestoes = snapshot.data as List<Sugestao>;
+            debugPrint('${sugestoes.length}');
+            if (sugestoes.length != 0) {
+              return ListView.builder(
+                itemCount: sugestoes.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return _buildRowSaved(sugestoes, index);
+                },
+              );
+            }
+        }
+        return Text('Unknown error');
       },
     );
-    /*case true:
-        return GridView.builder(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 1,
-            ),
-            itemCount: suggestions.where((element) => element.liked == true).toList().length,
-            itemBuilder: (BuildContext _context, int i) {
-              return _buildRowSaved(i);
-            });
-    }*/
+    //   ListView.builder(
+    //   padding: const EdgeInsets.all(16),
+    //   itemCount: suggestions
+    //       .where((element) => element.liked == true)
+    //       .toList()
+    //       .length,
+    //   itemBuilder: (context, index) {
+    //     return _buildRowSaved(index);
+    //   },
+    // );
   }
 
   Widget _buildRow(Sugestao pair, int index) {
-    final alreadySaved = suggestions[index].liked;
+    final alreadySaved = pair.liked;
     return ListTile(
       title: Text(
         WordPair(pair.first, pair.second).asPascalCase,
@@ -208,15 +217,14 @@ class _RandomWordsState extends State<RandomWords> {
       trailing: InkWell(
         onTap: () {
           //ao tocar no coração
-          setState(() {
             if (alreadySaved) {
-              /*suggestions[index].liked = false;*/
+              SugestaoDAO.modify(pair, Sugestao(pair.first, pair.second, false));
               pair.liked = false;
             } else {
-              /*suggestions[index].liked = true;*/
+              SugestaoDAO.modify(pair, Sugestao(pair.first, pair.second, true));
               pair.liked = true;
             }
-          });
+            setState(() {});
         },
         child: Icon(
           //aparecer o ícone de coração
@@ -247,7 +255,8 @@ class _RandomWordsState extends State<RandomWords> {
           debugPrint('modificar');
           setState(
             () {
-              SugestaoDAO.modify(pair, Sugestao(newWord[1], newWord[2], pair.liked));
+              SugestaoDAO.modify(
+                  pair, Sugestao(newWord[1], newWord[2], pair.liked));
               // suggestions[index] =
               //     Sugestao(newWord[1], newWord[2], pair.liked);
             },

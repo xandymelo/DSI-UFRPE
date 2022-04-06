@@ -18,7 +18,8 @@ class SugestaoDAO {
 
   static Future<List<Sugestao>> findAll() async {
     QuerySnapshot query = await db.collection('sugestao').get();
-    late List<Sugestao> sugestoes;
+    debugPrint('findALL: ${query.docs.length}');
+    List<Sugestao> sugestoes = [];
     if (query.docs.length == 0) {
       armazena20Palavras();
       sugestoes = await findAll();
@@ -30,8 +31,19 @@ class SugestaoDAO {
     return sugestoes;
   }
 
+  static Future<List<Sugestao>> findLiked() async {
+    QuerySnapshot query = await db.collection('sugestao').get();
+    List<Sugestao> sugestoes = [];
+    query.docs.forEach((doc) {
+      if (doc.get('liked') == true) {
+        sugestoes
+            .add(Sugestao(doc.get('first'), doc.get('second'), doc.get('liked')));
+      }
+    });
+    return sugestoes;
+  }
+
   static Future insert(Sugestao sugestao) async {
-    // _suggestions.add(sugestao);
     debugPrint('inserindo...');
     await db.collection('sugestao').doc().set({
       'first': '${sugestao.first}',
@@ -47,9 +59,7 @@ class SugestaoDAO {
         .where('first', isEqualTo: sugestao.first)
         .where('second', isEqualTo: sugestao.second)
         .where('liked', isEqualTo: sugestao.liked).get().then((id) async {
-          if (id != null) {
-            await db.collection('sugestao').doc(id.toString()).delete();
-          }
+          await db.collection('sugestao').doc(id.toString()).delete();
     });
   }
   static Future modify(Sugestao sugestaoDB, Sugestao sugestaoNova) async {
@@ -57,14 +67,13 @@ class SugestaoDAO {
         .collection('sugestao')
         .where('first', isEqualTo: sugestaoDB.first)
         .where('second', isEqualTo: sugestaoDB.second)
-        .where('liked', isEqualTo: sugestaoDB.liked).get().then((id) async {
-      if (id != null) {
-        await db.collection('sugestao').doc(id.toString()).set({
+        .where('liked', isEqualTo: sugestaoDB.liked).get().then((idt) async {
+          debugPrint('${idt.docs[0].id}');
+          await db.collection('sugestao').doc(idt.docs[0].id).set({
           'first': sugestaoNova.first,
           'second': sugestaoNova.second,
           'liked': sugestaoNova.liked
         });
-      }
     });
   }
 }

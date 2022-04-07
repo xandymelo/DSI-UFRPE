@@ -4,10 +4,11 @@ import 'package:flutter/material.dart';
 import '../models/sugestao.dart';
 
 class SugestaoDAO {
-  static final List<Sugestao> _suggestions = [];
+  // static final List<Sugestao> _suggestions = [];
   static FirebaseFirestore db = FirebaseFirestore.instance;
+  static TextStyle biggerFont = const TextStyle(fontSize: 18);
 
-   static get suggestions => _suggestions;
+   // static get suggestions => _suggestions;
 
   static Future armazena20Palavras() async {
     final Iterable<WordPair> wordpairs = generateWordPairs().take(20);
@@ -28,7 +29,7 @@ class SugestaoDAO {
       sugestoes
           .add(Sugestao(doc.get('first'), doc.get('second'), doc.get('liked')));
     });
-    _suggestions.addAll(sugestoes);
+    // _suggestions.addAll(sugestoes);
     return sugestoes;
   }
 

@@ -11,8 +11,6 @@ class RandomWords extends StatefulWidget {
 
 class _RandomWordsState extends State<RandomWords> {
   bool gridPressed = false;
-  Future<List<Sugestao>> findall = SugestaoDAO.findAll();
-  final _biggerFont = const TextStyle(fontSize: 18);
   // @override
   // void InitState() {
   //
@@ -50,40 +48,40 @@ class _RandomWordsState extends State<RandomWords> {
   Widget _buildSuggestions() {
     switch (gridPressed) {
       case false:
-        return ListView.builder(itemBuilder: (context, index) {
-          return _buildRow(SugestaoDAO.suggestions[index], index);
-        },
-        itemCount: SugestaoDAO.suggestions.length,);
-    // FutureBuilder<List<Sugestao>>(
-    //   // padding: const EdgeInsets.all(16),
-    //   // count: suggestions.length,
-    //   future: SugestaoDAO.findAll(),
-    //   builder: (context, snapshot) {
-    //     switch (snapshot.connectionState) {
-    //       case ConnectionState.none:
-    //         // TODO: Handle this case.
-    //         break;
-    //       case ConnectionState.waiting:
-    //         return const Progress();
-    //       case ConnectionState.active:
-    //         // TODO: Handle this case.
-    //         break;
-    //       case ConnectionState.done:
-    //         List<Sugestao> sugestoes = [];
-    //         if (snapshot.data != null) {
-    //           sugestoes = snapshot.data as List<Sugestao>;
-    //         }
-    //         debugPrint('FutureBuilder: ${sugestoes.length}');
-    //           return ListView.builder(
-    //             itemCount: sugestoes.length,
-    //             itemBuilder: (BuildContext context, int index) {
-    //               return _buildRow(sugestoes[index], index);
-    //             },
-    //           );
-    //     }
-    //     return Text('Unknown error');
-    //   }
-    //   );
+        // return ListView.builder(itemBuilder: (context, index) {
+        //   return _buildRow(SugestaoDAO.suggestions[index], index);
+        // },
+        // itemCount: SugestaoDAO.suggestions.length,);
+        return FutureBuilder<List<Sugestao>>(
+      // padding: const EdgeInsets.all(16),
+      // count: suggestions.length,
+      future: SugestaoDAO.findAll(),
+      builder: (context, snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.none:
+            // TODO: Handle this case.
+            break;
+          case ConnectionState.waiting:
+            return const Progress();
+          case ConnectionState.active:
+            // TODO: Handle this case.
+            break;
+          case ConnectionState.done:
+            List<Sugestao> sugestoes = [];
+            if (snapshot.data != null) {
+              sugestoes = snapshot.data as List<Sugestao>;
+            }
+            debugPrint('FutureBuilder: ${sugestoes.length}');
+              return ListView.builder(
+                itemCount: sugestoes.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return _buildRow(sugestoes[index], index);
+                },
+              );
+        }
+        return Text('Unknown error');
+      }
+      );
       case true:
         return FutureBuilder<List<Sugestao>>(
           // padding: const EdgeInsets.all(16),
@@ -123,98 +121,23 @@ class _RandomWordsState extends State<RandomWords> {
   }
 
 
-  Widget _buildRowSaved(List<Sugestao> suggestions, int index) {
-    final List<Sugestao> tilesAsLlist =
-    suggestions.where((element) => element.liked == true).toList();
-    final Iterable<ListTile> listTiles = tilesAsLlist.map(
-          (Sugestao pair) {
-        return ListTile(
-          title: Text(
-            WordPair(pair.first, pair.second).asPascalCase,
-            style: _biggerFont,
-          ),
-        );
-      },
-    );
-    final divided = ListTile.divideTiles(
-      context: context,
-      tiles: listTiles,
-    ).toList();
-    final item = divided[index];
-    return Dismissible(
-      child: item,
-      key: ValueKey(item),
-      onDismissed: (direction) {
-        // Remove o item da fonte de dados
-        setState(() {
-          suggestions[index].liked = false;
-        });
-      },
-      background: Container(
-        decoration: BoxDecoration(
-            shape: BoxShape.rectangle,
-            gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: [
-                Colors.blue,
-                Colors.yellow,
-              ],
-            ),
-            borderRadius: BorderRadius.circular(12)),
-        child: Align(
-          alignment: Alignment(-0.8, 0),
-          child: Icon(Icons.delete, color: Colors.black38),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildSave() {
-    return FutureBuilder(
-      future: SugestaoDAO.findLiked(),
-      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-        switch (snapshot.connectionState) {
-          case ConnectionState.none:
-          // TODO: Handle this case.
-            break;
-          case ConnectionState.waiting:
-            return const Progress();
-          case ConnectionState.active:
-          // TODO: Handle this case.
-            break;
-          case ConnectionState.done:
-            final sugestoes = snapshot.data as List<Sugestao>;
-            debugPrint('${sugestoes.length}');
-            if (sugestoes.length != 0) {
-              return ListView.builder(
-                itemCount: sugestoes.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return _buildRowSaved(sugestoes, index);
-                },
-              );
-            }
-        }
-        return Text('Unknown error');
-      },
-    );
-  }
 
   Widget _buildRow(Sugestao pair, int index) {
     final alreadySaved = pair.liked;
     return ListTile(
       title: Text(
         WordPair(pair.first, pair.second).asPascalCase,
-        style: _biggerFont,
+        style: SugestaoDAO.biggerFont,
       ),
       trailing: InkWell(
-        onTap: () {
+        onTap: () async {
           //ao tocar no coração
           if (alreadySaved) {
-            SugestaoDAO.modify(pair, Sugestao(pair.first, pair.second, false));
+            await SugestaoDAO.modify(pair, Sugestao(pair.first, pair.second, false));
             pair.liked = false;
           } else {
-            SugestaoDAO.modify(pair, Sugestao(pair.first, pair.second, true));
+            await SugestaoDAO.modify(pair, Sugestao(pair.first, pair.second, true));
             pair.liked = true;
           }
           setState(() {});
@@ -236,48 +159,31 @@ class _RandomWordsState extends State<RandomWords> {
       'first': pair.first,
       'second': pair.second,
     }).then(
-          (newWord) {
+          (newWord) async {
         final List<String> users = newWord as List<String>;
         //caso o index -1 é o caso do floating action button,ou seja, adicionar a lista
         if (index == -1 && newWord[0] == 'M') {
           debugPrint('floatingbutton');
-          setState(() {
-            SugestaoDAO.insert(Sugestao(newWord[1], newWord[2], false));
-          });
+          SugestaoDAO.insert(Sugestao(newWord[1], newWord[2], false));
+          setState(() {});
         } else if (newWord[0] == 'M' && newWord[1] != '' && newWord[2] != '') {
           debugPrint('modificar');
-          setState(
-                () {
-              SugestaoDAO.modify(
-                  pair, Sugestao(newWord[1], newWord[2], pair.liked));
-            },
-          );
+          await SugestaoDAO.modify(
+              pair, Sugestao(newWord[1], newWord[2], pair.liked));
+          setState(() {});
         } else if (newWord[0] == 'D' ||
             (newWord[1] == '' && newWord[2] == '')) {
           debugPrint('deletar');
-          setState(() {
-            SugestaoDAO.remove(pair).then((id) {
-              SugestaoDAO.suggestions.remove(pair);
-              debugPrint('${SugestaoDAO.suggestions}');
-            });
-          });
+          await SugestaoDAO.remove(pair);
+          setState(() {});
         }
       },
     );
   }
 
   Future _pushSaved() async {
-    return await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (BuildContext context) {
-          return Scaffold(
-            appBar: AppBar(
-              title: Text('Saved Suggestions'),
-            ),
-            body: _buildSave(),
-          );
-        },
-      ),
-    );
+    return await Navigator.pushNamed(context, '/saved').then((algo) {
+      setState(() {});
+    });
   }
 }

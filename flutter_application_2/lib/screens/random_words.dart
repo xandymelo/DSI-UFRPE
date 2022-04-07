@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:english_words/english_words.dart';
 import '../DAO/sugestao_dao.dart';
 import '../models/sugestao.dart';
-import '../widgets/progress.dart';
 
 class RandomWords extends StatefulWidget {
   @override
@@ -11,11 +10,8 @@ class RandomWords extends StatefulWidget {
 
 class _RandomWordsState extends State<RandomWords> {
   bool gridPressed = false;
-  // @override
-  // void InitState() {
-  //
-  //   super.initState();
-  // }
+
+  final _biggerFont = const TextStyle(fontSize: 18);
 
   @override
   Widget build(BuildContext context) {
@@ -25,14 +21,13 @@ class _RandomWordsState extends State<RandomWords> {
         actions: [
           IconButton(onPressed: _pushSaved, icon: Icon(Icons.list)),
           IconButton(
-              onPressed: () =>
-                  setState(() {
-                    if (gridPressed) {
-                      gridPressed = false;
-                    } else {
-                      gridPressed = true;
-                    }
-                  }),
+              onPressed: () => setState(() {
+                if (gridPressed) {
+                  gridPressed = false;
+                } else {
+                  gridPressed = true;
+                }
+              }),
               icon: Icon(Icons.grid_goldenratio))
         ],
       ),
@@ -48,99 +43,143 @@ class _RandomWordsState extends State<RandomWords> {
   Widget _buildSuggestions() {
     switch (gridPressed) {
       case false:
-        // return ListView.builder(itemBuilder: (context, index) {
-        //   return _buildRow(SugestaoDAO.suggestions[index], index);
-        // },
-        // itemCount: SugestaoDAO.suggestions.length,);
-        return FutureBuilder<List<Sugestao>>(
-      // padding: const EdgeInsets.all(16),
-      // count: suggestions.length,
-      future: SugestaoDAO.findAll(),
-      builder: (context, snapshot) {
-        switch (snapshot.connectionState) {
-          case ConnectionState.none:
-            // TODO: Handle this case.
-            break;
-          case ConnectionState.waiting:
-            return const Progress();
-          case ConnectionState.active:
-            // TODO: Handle this case.
-            break;
-          case ConnectionState.done:
-            List<Sugestao> sugestoes = [];
-            if (snapshot.data != null) {
-              sugestoes = snapshot.data as List<Sugestao>;
-            }
-            debugPrint('FutureBuilder: ${sugestoes.length}');
-              return ListView.builder(
-                itemCount: sugestoes.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return _buildRow(sugestoes[index], index);
-                },
-              );
-        }
-        return Text('Unknown error');
-      }
-      );
-      case true:
-        return FutureBuilder<List<Sugestao>>(
-          // padding: const EdgeInsets.all(16),
-          // count: suggestions.length,
-            initialData: [],
-            future: SugestaoDAO.findAll(),
-            builder: (context, snapshot) {
-              switch (snapshot.connectionState) {
-                case ConnectionState.none:
-                // TODO: Handle this case.
-                  break;
-                case ConnectionState.waiting:
-                  return const Progress();
-                case ConnectionState.active:
-                // TODO: Handle this case.
-                  break;
-                case ConnectionState.done:
-                  final sugestoes = snapshot.data as List<Sugestao>;
-                  debugPrint('${sugestoes.length}');
-                  if (sugestoes.length != 0) {
-                    return GridView.builder(
-                        itemCount: sugestoes.length,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 1,
-                        ),
-                        itemBuilder: (BuildContext _context, int index) {
-                          return _buildRow(sugestoes[index], index);
-                        });
-                  }
+        return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemBuilder: (BuildContext _context, int i) {
+              if (i.isOdd) {
+                return Divider();
               }
-              return Text('Unknown error');
-            }
-        );
+
+              final int index = i ~/ 2;
+              if (index >= SugestaoDAO.suggestions.length) {
+                final Iterable<WordPair> wordsGenerated =
+                generateWordPairs().take(10);
+                final List<Sugestao> wordsConverted = [];
+                wordsGenerated.forEach((element) {
+                  wordsConverted.add(Sugestao(element.first.toString(),
+                      element.second.toString(), false));
+                });
+                SugestaoDAO.suggestions.addAll(wordsConverted);
+              }
+              return _buildRow(SugestaoDAO.suggestions[index], index);
+            });
+      case true:
+        return GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 1,
+            ),
+            itemBuilder: (BuildContext _context, int i) {
+              final int index = i;
+              if (index >= SugestaoDAO.suggestions.length) {
+                final Iterable<WordPair> wordsGenerated =
+                generateWordPairs().take(10);
+                final List<Sugestao> wordsConverted = [];
+                wordsGenerated.forEach((element) {
+                  wordsConverted.add(Sugestao(element.first.toString(),
+                      element.second.toString(), false));
+                });
+                SugestaoDAO.suggestions.addAll(wordsConverted);
+              }
+              return _buildRow(SugestaoDAO.suggestions[index], index);
+            });
     }
     return Text('nada');
   }
 
+  Widget _buildRowSaved(int index) {
+    final List<Sugestao> tilesAsLlist = SugestaoDAO.suggestions
+        .where((element) => element.liked == true)
+        .toList();
+    final Iterable<ListTile> listTiles = tilesAsLlist.map(
+          (Sugestao pair) {
+        return ListTile(
+          title: Text(
+            WordPair(pair.first, pair.second).asPascalCase,
+            style: _biggerFont,
+          ),
+        );
+      },
+    );
+    final divided = ListTile.divideTiles(
+      context: context,
+      tiles: listTiles,
+    ).toList();
+    final item = divided[index];
+    return Dismissible(
+      child: item,
+      key: ValueKey(item),
+      onDismissed: (direction) {
+        // Remove o item da fonte de dados
+        setState(() {
+          SugestaoDAO.suggestions[index].liked = false;
+        });
+      },
+      background: Container(
+        decoration: BoxDecoration(
+            shape: BoxShape.rectangle,
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: [
+                Colors.blue,
+                Colors.yellow,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(12)),
+        child: Align(
+          alignment: Alignment(-0.8, 0),
+          child: Icon(Icons.delete, color: Colors.black38),
+        ),
+      ),
+    );
+  }
 
-
+  Widget _buildSave() {
+    /*switch (gridPressed) {
+      case false:*/
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: SugestaoDAO.suggestions
+          .where((element) => element.liked == true)
+          .toList()
+          .length,
+      itemBuilder: (context, index) {
+        return _buildRowSaved(index);
+      },
+    );
+    /*case true:
+        return GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 1,
+            ),
+            itemCount: SugestaoDAO.suggestions.where((element) => element.liked == true).toList().length,
+            itemBuilder: (BuildContext _context, int i) {
+              return _buildRowSaved(i);
+            });
+    }*/
+  }
 
   Widget _buildRow(Sugestao pair, int index) {
-    final alreadySaved = pair.liked;
+    final alreadySaved = SugestaoDAO.suggestions[index].liked;
     return ListTile(
       title: Text(
         WordPair(pair.first, pair.second).asPascalCase,
-        style: SugestaoDAO.biggerFont,
+        style: _biggerFont,
       ),
       trailing: InkWell(
-        onTap: () async {
+        onTap: () {
           //ao tocar no coração
-          if (alreadySaved) {
-            await SugestaoDAO.modify(pair, Sugestao(pair.first, pair.second, false));
-            pair.liked = false;
-          } else {
-            await SugestaoDAO.modify(pair, Sugestao(pair.first, pair.second, true));
-            pair.liked = true;
-          }
-          setState(() {});
+          setState(() {
+            if (alreadySaved) {
+              /*SugestaoDAO.suggestions[index].liked = false;*/
+              pair.liked = false;
+            } else {
+              /*SugestaoDAO.suggestions[index].liked = true;*/
+              pair.liked = true;
+            }
+          });
         },
         child: Icon(
           //aparecer o ícone de coração
@@ -159,31 +198,44 @@ class _RandomWordsState extends State<RandomWords> {
       'first': pair.first,
       'second': pair.second,
     }).then(
-          (newWord) async {
+          (newWord) {
         final List<String> users = newWord as List<String>;
         //caso o index -1 é o caso do floating action button,ou seja, adicionar a lista
         if (index == -1 && newWord[0] == 'M') {
-          debugPrint('floatingbutton');
-          SugestaoDAO.insert(Sugestao(newWord[1], newWord[2], false));
-          setState(() {});
+          setState(() {
+            SugestaoDAO.suggestions
+                .insert(0, Sugestao(newWord[1], newWord[2], false));
+            debugPrint('${SugestaoDAO.suggestions[0]}');
+          });
         } else if (newWord[0] == 'M' && newWord[1] != '' && newWord[2] != '') {
-          debugPrint('modificar');
-          await SugestaoDAO.modify(
-              pair, Sugestao(newWord[1], newWord[2], pair.liked));
-          setState(() {});
+          setState(
+                () {
+              SugestaoDAO.suggestions[index] =
+                  Sugestao(newWord[1], newWord[2], pair.liked);
+            },
+          );
         } else if (newWord[0] == 'D' ||
             (newWord[1] == '' && newWord[2] == '')) {
-          debugPrint('deletar');
-          await SugestaoDAO.remove(pair);
-          setState(() {});
+          setState(() {
+            SugestaoDAO.suggestions.remove(pair);
+          });
         }
       },
     );
   }
 
   Future _pushSaved() async {
-    return await Navigator.pushNamed(context, '/saved').then((algo) {
-      setState(() {});
-    });
+    return await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('Saved Suggestions'),
+            ),
+            body: _buildSave(),
+          );
+        },
+      ),
+    );
   }
 }

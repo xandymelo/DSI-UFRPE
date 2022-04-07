@@ -3,7 +3,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/edit_suggestion.dart';
 import 'package:flutter_application_1/screens/random_words.dart';
-import 'package:flutter_application_1/screens/save_suggestions.dart';
 
 
 void main() async {
@@ -28,9 +27,8 @@ class StartupGenerator extends StatelessWidget {
       routes: {
         // When navigating to the "/second" route, build the SecondScreen widget.
         '/edit': (context) => EditSuggestion(),
-        '/saved': (contexxt) => SaveSuggestions(),
-      },
-    );
+        // '/saved': (contexxt) => SaveSuggestions(),
+      },    );
   }
 }
 
